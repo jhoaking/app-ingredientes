@@ -9,7 +9,7 @@ import { CreateRecetaDto } from './dto/create-receta.dto';
 import { UpdateRecetaDto } from './dto/update-receta.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Receta } from './entities/receta.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { RecetaIngrediente } from './entities/ingredientes-recetas.entity';
 import { RecetaImages } from './entities/receta-images.entity';
 import { PaginationDto } from 'src/common/dto/pagination.dt';
@@ -27,6 +27,8 @@ export class RecetasService {
     private readonly recetaIngredienteRepository: Repository<RecetaIngrediente>,
     @InjectRepository(RecetaImages)
     private readonly recetaImageRepository: Repository<RecetaImages>,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(createRecetaDto: CreateRecetaDto) {
@@ -115,16 +117,50 @@ export class RecetasService {
     }));
   }
 
+  async update(id: string, updateRecetaDto: UpdateRecetaDto) {
+    const { images = [], ingredientes = [], ...toUpdate } = updateRecetaDto;
 
-  update(id: number, updateRecetaDto: UpdateRecetaDto) {
-    return `This action updates a #${id} receta`;
+    const receta = await this.recetaRepository.preload({
+      id,
+      ...toUpdate,
+    });
+
+    if (!receta) throw new NotFoundException(`receta with ${id} not found`);
+
+    // haciendo QueryRunner
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      if (images && ingredientes) {
+        await queryRunner.manager.delete(RecetaImages, { receta: { id } });
+        await queryRunner.manager.delete(RecetaIngrediente, { receta: { id } });
+
+        ((receta.images = images.map((image) =>
+          this.recetaImageRepository.create({ url: image }),
+        )),
+          (receta.ingredientes = ingredientes.map((ingre) =>
+            this.recetaIngredienteRepository.create({ nombre: ingre }),
+          )));
+      }
+      await queryRunner.manager.save(receta);
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+
+      return this.findOnePlain(id);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+
+      this.handlerException(error);
+    }
   }
 
+  async remove(id: string) {
+    const receta = await this.findOne(id);
 
-
-  
-  remove(id: number) {
-    return `This action removes a #${id} receta`;
+    return this.recetaRepository.remove(receta);
   }
 
   private handlerException(error: any) {

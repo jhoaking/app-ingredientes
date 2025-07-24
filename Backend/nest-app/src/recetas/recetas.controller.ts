@@ -30,11 +30,11 @@ export class RecetasController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateRecetaDto: UpdateRecetaDto) {
-    return this.recetasService.update(+id, updateRecetaDto);
+    return this.recetasService.update(id, updateRecetaDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.recetasService.remove(+id);
+    return this.recetasService.remove(id);
   }
 }
