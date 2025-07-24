@@ -20,7 +20,12 @@ export class RecetasController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.recetasService.findOne(+id);
+    return this.recetasService.findOnePlain(id);
+  }
+
+   @Get('search/:term')
+  findByQuery(@Param('term') term: string) {
+    return this.recetasService.findQueryPlain(term);
   }
 
   @Patch(':id')

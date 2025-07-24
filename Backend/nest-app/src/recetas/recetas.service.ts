@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateRecetaDto } from './dto/create-receta.dto';
 import { UpdateRecetaDto } from './dto/update-receta.dto';
@@ -12,6 +13,8 @@ import { Repository } from 'typeorm';
 import { RecetaIngrediente } from './entities/ingredientes-recetas.entity';
 import { RecetaImages } from './entities/receta-images.entity';
 import { PaginationDto } from 'src/common/dto/pagination.dt';
+
+import { validate as isUUID } from 'uuid';
 
 @Injectable()
 export class RecetasService {
@@ -64,14 +67,62 @@ export class RecetasService {
     }));
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} receta`;
+  async findOne(id: string) {
+    let receta: Receta | null = null;
+
+    if (isUUID(id)) {
+      receta = await this.recetaRepository.findOneBy({ id: id });
+    }
+
+    if (!receta) {
+      throw new NotFoundException(`receta with ${id} not found`);
+    }
+    return receta;
   }
+
+  async findQuery(term: string) {
+    const recetas = await this.recetaRepository
+      .createQueryBuilder('rece')
+      .where('LOWER(rece.categorias) = :term OR LOWER(rece.nombre) = :term', {
+        term: term.toLowerCase(),
+      })
+      .leftJoinAndSelect('rece.images', 'receImage')
+      .leftJoinAndSelect('rece.ingredientes', 'receIngrediente')
+      .getMany();
+
+    if (!recetas.length) {
+      throw new NotFoundException(`No se encontraron recetas con "${term}"`);
+    }
+
+    return recetas;
+  }
+
+  async findOnePlain(id: string) {
+    const { images = [], ingredientes = [], ...rest } = await this.findOne(id);
+    return {
+      ...rest,
+      images: images.map((ima) => ima.url),
+      ingredientes: ingredientes.map((ingre) => ingre.nombre),
+    };
+  }
+
+  async findQueryPlain(term: string) {
+    const recetas = await this.findQuery(term);
+    return recetas.map(({ images = [], ingredientes = [], ...rest }) => ({
+      ...rest,
+      images: images.map((ima) => ima.url),
+      ingredientes: ingredientes.map((ingre) => ingre.nombre),
+    }));
+  }
+
 
   update(id: number, updateRecetaDto: UpdateRecetaDto) {
     return `This action updates a #${id} receta`;
   }
 
+
+
+  
   remove(id: number) {
     return `This action removes a #${id} receta`;
   }
