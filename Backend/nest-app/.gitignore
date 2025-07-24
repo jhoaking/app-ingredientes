@@ -4,6 +4,8 @@
 /build
 .env
 /postgres
+
+
 # Logs
 logs
 *.log

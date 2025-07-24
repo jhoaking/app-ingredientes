@@ -37,7 +37,7 @@ export class CreateRecetaDto {
   ingredientes: string[];
 
   @IsString({ each: true })
-  @IsOptional()
   @IsArray()
+  @IsOptional()
   images?: string[];
 }

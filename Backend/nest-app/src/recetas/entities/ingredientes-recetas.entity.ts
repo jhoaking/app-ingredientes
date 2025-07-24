@@ -1,9 +1,9 @@
-import { Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn,  } from 'typeorm';
 import { Receta } from './receta.entity';
 
-@Entity({ name: 'recetas-ingredientes' })
+@Entity({ name: 'recetas_ingredientes' })
 export class RecetaIngrediente {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
   id: number;
 
   @Column('text')
@@ -14,3 +14,4 @@ export class RecetaIngrediente {
   })
   receta: Receta;
 }
+  
