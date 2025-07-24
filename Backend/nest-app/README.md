@@ -12,3 +12,4 @@
 3. Clonar el archivo ```.env.template ``` y renombrarlo a ```.env```
 
 4. Cambiar las variables de entorno
+
