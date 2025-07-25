@@ -170,4 +170,14 @@ export class RecetasService {
       'unexpected error check server logs!',
     );
   }
+
+  async deleteAllRecipes() {
+    const query = this.recetaRepository.createQueryBuilder('receta');
+
+    try {
+      return await query.delete().where({}).execute();
+    } catch (error) {
+      this.handlerException(error);
+    }
+  }
 }

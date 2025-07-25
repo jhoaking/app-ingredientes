@@ -9,6 +9,9 @@ import { RecetaImages } from './entities/receta-images.entity';
 @Module({
   controllers: [RecetasController],
   providers: [RecetasService],
-  imports : [TypeOrmModule.forFeature([Receta,RecetaIngrediente,RecetaImages])]
+  imports: [
+    TypeOrmModule.forFeature([Receta, RecetaIngrediente, RecetaImages]),
+  ],
+  exports: [RecetasService, TypeOrmModule],
 })
 export class RecetasModule {}
