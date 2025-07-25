@@ -18,5 +18,14 @@
 
 ```
 docker-compose up -d
-````
--
+```
+
+
+6. ejecutar SEED
+```
+  http://localhost:3000/seed
+
+```
+
+7. Levantar: ```pnpm run start:dev ```
+
